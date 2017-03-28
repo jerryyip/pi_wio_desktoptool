@@ -20,7 +20,9 @@ thread = None
 
 time_last_sit = 0
 time_total_sit = 0
+time_not_sit = 0
 time_last_empty = time.time()
+time_one_sit = 0
 
 
 WIO_TOKEN = "7093a8f74d427dc4d2bf4d732ed74183"
@@ -76,26 +78,85 @@ def get_time():
     global time_last_sit
     global time_total_sit
     global time_last_empty
+    global time_not_sit
+    global time_one_sit
+
     cm = foo()
     if cm < 40.0 and cm > 0.0:
-      if time_last_empty > time_last_sit:
-        time_last_sit = time.time()
-        time_total_sit += time_last_sit - time_last_empty     
-        emit('return_time',
-              {'data': count_time(time_total_sit)})
-      else:
-        time_temporary = time.time()
-        time_total_sit += time_temporary - time_last_sit
-        time_last_sit = time_temporary
-        emit('return_time',
-              {'data': count_time(time_total_sit)})
-    elif cm >= 40.0:
-      time_last_empty = time.time()
+        if time_last_empty > time_last_sit:
+            time_one_sit = 0
+            time_last_sit = time.time()
+            time_total_sit += time_last_sit - time_last_empty     
+            emit('return_time',
+              {'data': count_time(time_total_sit),
+               'data2': count_time(time_not_sit),
+               'data3': count_time(time_one_sit)})
 
-def count_time(total_time):
-    hour = int(total_time / 3600)
-    minu = (int(total_time) % 3600) / 60
-    sec = int(total_time) % 60
+        else:
+            time_temporary = time.time()
+            time_total_sit += time_temporary - time_last_sit
+            time_last_sit = time_temporary
+            time_one_sit = time_last_sit - time_last_empty
+            emit('return_time',
+              {'data': count_time(time_total_sit),
+               'data2': count_time(time_not_sit),
+               'data3': count_time(time_one_sit)})
+
+    elif cm >= 40.0:
+        if time_last_empty > time_last_sit:
+            time_temporary = time.time()
+            time_not_sit += time_temporary - time_last_empty
+            time_last_empty = time_temporary
+            emit('return_time',
+              {'data': count_time(time_total_sit),
+               'data2': count_time(time_not_sit),
+               'data3': count_time(time_one_sit)})
+        else:
+            time_last_empty = time.time()
+            time_not_sit += time_last_empty - time_last_sit
+            emit('return_time',
+              {'data': count_time(time_total_sit),
+               'data2': count_time(time_not_sit),
+               'data3': count_time(time_one_sit)})
+
+@socketio.on('my_reset', namespace='/test')
+def reset_time():
+    global time_total_sit
+    global time_last_empty
+    global time_not_sit
+    global time_last_sit
+    global time_one_sit
+
+    time_last_sit = 0
+    time_total_sit = 0
+    time_not_sit = 0
+    time_last_empty = time.time()
+    time_one_sit = 0
+    emit('return_time',
+          {'data': count_time(time_total_sit),
+           'data2': count_time(time_not_sit),
+           'data3': count_time(time_one_sit)})
+
+
+@socketio.on('my_continute', namespace='/test')
+def my_continute():
+    global time_total_sit
+    global time_last_empty
+    global time_not_sit
+    global time_last_sit
+    global time_one_sit
+    
+    time_last_empty = time_last_sit = time.time()
+    emit('return_time',
+          {'data': count_time(time_total_sit),
+           'data2': count_time(time_not_sit),
+           'data3': count_time(time_one_sit)})    
+    
+
+def count_time(_time):
+    hour = int(_time / 3600)
+    minu = (int(_time) % 3600) / 60
+    sec = int(_time) % 60
     return ("%d : %d : %d" % (hour, minu, sec,))
 
 
@@ -113,4 +174,4 @@ def test_disconnect():
 
 
 if __name__ == '__main__':
-    socketio.run(app)
+    socketio.run(app, '0.0.0.0')

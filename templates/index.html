@@ -1,8 +1,13 @@
 <!DOCTYPE HTML>
 <html>
 <head>
+    <meta charset="utf-8" name="viewport" content="width=device-width, initial-scale=1.0"> 
     <title>wio_pi Test</title>
-    <script type="text/javascript" src="//code.jquery.com/jquery-1.4.2.min.js"></script>
+            <link rel="stylesheet" href="static/css/bootstrap.min.css">  
+        <link rel="stylesheet" href="static/css/main.css">  
+        <script type="text/javascript" src="static/js/jquery-3.1.1.min.js"></script>
+        <script type="text/javascript" src="static/js/bootstrap.min.js"></script>
+    <!-- <script type="text/javascript" src="//code.jquery.com/jquery-1.4.2.min.js"></script> -->
     <script src="http://d3js.org/d3.v3.min.js" charset="utf-8"></script>
     <script type="text/javascript" src="//cdnjs.cloudflare.com/ajax/libs/socket.io/1.3.5/socket.io.min.js"></script>
     <script type="text/javascript" charset="utf-8">
@@ -28,27 +33,88 @@
             // to the client. The data is then displayed in the "Received"
             // section of the page.
             socket.on('my_response', function(msg) {
-            //    $('#log').append('<br>' + $('<div/>').text('Received #' + msg.count + ': ' + msg.data).html());
+               // $('#log').append('<br>' + $('<div/>').text('Received #' + msg.count + ': ' + msg.data).html());
             });
             
-
+            var get_time_swith = true;
             window.setInterval(function() {
-                socket.emit('get_time');
+                if (get_time_swith) {
+                    socket.emit('get_time');}
             }, 500);
             socket.on('return_time', function(msg) {
-                $('#get').text($('<div/>').text(msg.data).html());
+                $('#setting_time').text($('<div/>').text(msg.data).html());
+                $('#not_setting_time').text($('<div/>').text(msg.data2).html());
+                $('#continuity_sitting_time').text($('<div/>').text(msg.data3).html());
             });
-
+            $('form#reset').submit(function(event) {
+                    socket.emit('my_reset');
+                    return false;
+            });        
+            $('form#pause').submit(function(event) {
+                    get_time_swith = false;
+                    return false;
+            }); 
+            $('form#continute').submit(function(event) {
+                    socket.emit('my_continute');
+                    get_time_swith = true;
+                    return false;
+            }); 
         });
-
     </script>
+
+
 </head>
-<body>
+<body style="background-color: #FFCC00">
+    <center>
+    <h1>Continuity sitting time</h1>
+    <h2>
+    <div id='continuity_sitting_time'>
+        <p>0:0:1</p>
+    </div>
+    </h2>
     <h1>Total sitting time</h1>
     <h2>
-    <div id='get'></div>
+    <div id='setting_time'>
+        <p>0:0:1</p>
+    </div>
     </h2>
-    <!-- <h2>Receive:</h2> -->
+    <h1>Not on your chair</h1>
+    <h2>
+    <div id='not_setting_time'>
+        <p>1:22:1</p>
+    </div>
+    </h2>
+    <br>
+    <br>
+      <table class="text-center">
+      <tr>
+      <td>      
+      <form  menthod="POST" action="#" id="reset">
+         <button type="submit" class="btn btn-primary btn-lg">
+            &nbsp;&nbsp;Reset&nbsp;&nbsp;
+         </button>&nbsp;&nbsp;&nbsp;&nbsp;
+      </form>
+      </td>
+      <td>
+      <form menthod="POST" action="#" id="pause">
+         <button type="submit" class="btn btn-info btn-lg">
+            &nbsp;&nbsp;Pause&nbsp;&nbsp;
+         </button>&nbsp;&nbsp;&nbsp;&nbsp;
+      </form>
+      </td>
+            <td>
+      <form menthod="POST" action="#" id="continute">
+         <button type="submit" class="btn btn-success btn-lg">
+            Continute
+         </button>
+      </form>
+      </td>
+      </tr>
+      </table>
+      </center>
+
+
+
     <div id="log"></div>
 </body>
 </html>
